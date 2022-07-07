@@ -24,8 +24,9 @@ namespace FinanceApp.Controllers
         [HttpPost("AddNewCustomer")]
         public IActionResult AddCustomerDetails([FromBody] CustomerModel userObj)
         {
+            userObj.Status = "open";
             if (!context.CustomerModels.Any(a => a.CustomerId == userObj.CustomerId && a.MobileNumber == userObj.MobileNumber && a.AadharNumber == userObj.AadharNumber))
-            context.CustomerModels.Add(userObj);
+                context.CustomerModels.Add(userObj);
             context.SaveChanges();
             return Ok(userObj);
         }
@@ -135,12 +136,25 @@ namespace FinanceApp.Controllers
                                           a.GuarantorName,
                                           a.ReferredBy,
                                           a.MobileNumber,
-                                          a.Address
+                                          a.AadharNumber,
+                                          a.Address,
+                                          a.Status
+
 
                                       }).ToList();
             var produts = allproductcustomer.ToList();
             return Ok(produts);
 
+        }
+
+        [HttpGet("Page")]
+        public ActionResult<List<CustomerModel>> GetAll(int? page = 10, int? pageSize = 10)
+        {
+            if (!page.HasValue)
+            {
+                return context.CustomerModels.ToList();
+            }
+            return BadRequest();
         }
     }
 }

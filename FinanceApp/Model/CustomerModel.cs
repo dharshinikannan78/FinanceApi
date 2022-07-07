@@ -20,6 +20,7 @@ namespace FinanceApp.Model
         public DateTime DateOfModified { get; set; }
         public bool IsActive { get; set; } = true;
         public int AttachmentId { get; set; }
+        public string Status { get; set; }
 
 
     }

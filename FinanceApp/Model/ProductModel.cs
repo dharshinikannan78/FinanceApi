@@ -20,6 +20,9 @@ namespace FinanceApp.Model
         public bool IsActive { get; set; } = true;
         public int Price { get; set; }
         public DateTime StartDate { get; set; }
+        public string IsStatus { get; set; }
+
+
 
 
     }

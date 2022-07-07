@@ -14,6 +14,8 @@ namespace FinanceApp.Model
         public DateTime PaymentDate { get; set; }
         public string PaidAmount { get; set; }
         public string CollectedBy { get; set; }
-        
+        public int SubscriberList { get; set; }
+
+
     }
 }

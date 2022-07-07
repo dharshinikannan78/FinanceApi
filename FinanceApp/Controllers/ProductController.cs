@@ -28,6 +28,7 @@ namespace FinanceApp.Controllers
             return Ok(details);
         }
 
+
         [HttpGet("customer")]
         public IActionResult CustomerDetails(int id)
         {
@@ -38,16 +39,17 @@ namespace FinanceApp.Controllers
         [HttpPost("AddNewProduct")]
         public IActionResult AddProductDetails([FromBody] ProductModel productObj)
         {
-            if (!context.ProductModels.Any(a => a.ProductName == productObj.ProductName))
-            {
-                context.ProductModels.Add(productObj);
-                context.SaveChanges();
-                return Ok(productObj);
-            }
+            /* if (!context.ProductModels.Any(a => a.ProductName == productObj.ProductName))
+             {*/
+            productObj.IsStatus = "open";
+            context.ProductModels.Add(productObj);
+            context.SaveChanges();
+            return Ok(productObj);
+            /*}
             else
             {
                 return BadRequest();
-            }
+            }*/
         }
 
 
@@ -73,20 +75,38 @@ namespace FinanceApp.Controllers
             }
         }
 
-
-
         [HttpPut("UpdateProduct")]
         public IActionResult UpdateProductDetails([FromBody] ProductModel productObj)
         {
-            var product = context.ProductModels.AsNoTracking().FirstOrDefault(a => a.ProductId == productObj.ProductId);
-            if (product != null)
-            {
 
+            if (context.ProductModels.Any(a => a.ProductId == productObj.
+             ProductId && a.ProductName == productObj.ProductName))
+            {
                 context.Entry(productObj).State = EntityState.Modified;
                 context.SaveChanges();
                 return Ok(productObj);
             }
-            return BadRequest();
+            else if (context.ProductModels.Any(a => a.ProductId == productObj.ProductId && a.ProductName != productObj.ProductName))
+            {
+                if (context.ProductModels.Any(a => a.ProductName == productObj.ProductName))
+                {
+                    return BadRequest(new
+                    {
+                        StatusCode = "400"
+                    });
+                }
+                else
+                {
+                    context.Entry(productObj).State = EntityState.Modified;
+                    context.SaveChanges();
+                    return Ok(productObj);
+                }
+
+            }
+            return BadRequest(new
+            {
+                StatusCode = "400"
+            });
         }
 
         [HttpDelete("DeleteProduct")]
@@ -117,7 +137,7 @@ namespace FinanceApp.Controllers
         public IActionResult GetAllProductCustomer()
         {
             var allproductcustomer = (from a in context.ProductCustomerModels
-                                      join p in context.ProductModels on a.ProductId equals p.ProductId 
+                                      join p in context.ProductModels on a.ProductId equals p.ProductId
                                       select new
                                       {
                                           p.ProductName,
@@ -131,6 +151,50 @@ namespace FinanceApp.Controllers
             return Ok(produts);
 
         }
+
+
+        [HttpGet("GetProductDetails")]
+        public IActionResult ProductDetails()
+        {
+
+            var data = from s in context.ProductModels
+                       where s.IsStatus == "open"
+                       join i in context.ProductCustomerModels on s.ProductId equals i.ProductId into groupClasses
+                       
+                       from gc in groupClasses.DefaultIfEmpty()
+                       group gc by new
+                       {
+                           product = s.ProductId == null ? 0 : s.ProductId,
+                           Name = s.ProductName == null ? "no value" : s.ProductName,
+                           IsStatus = s.IsStatus == null ? "no value" : s.IsStatus,
+                           Tenure = s.ProductTenure == null ? 0 : s.ProductTenure,
+                           Type = s.ProductType == null ? "no value" : s.ProductType,
+                           Customers = s.NoOfCustomers == null ? 0 : s.NoOfCustomers,
+                           Price = s.Price == null ? 0 : s.Price,
+                           ProductDescription = s.ProductDescription == null ? "no value" : s.ProductDescription
+                       }
+         into g
+                       select new
+                       {
+                           productId = g.Key.product,
+                           productName = g.Key.Name,
+                           ProductTenure = g.Key.Tenure,
+                           ProductType = g.Key.Type,
+                           Price = g.Key.Price,
+                           ProductDescription = g.Key.ProductDescription,
+                           NoOfCustomers = g.Key.Customers,
+                           IsStatus = g.Key.IsStatus,
+                           Slot = g.Max(p => p == null ? 0 : p.SlotNo)
+                       };
+            return Ok(data);
+
+
+        }
+
+
     }
 }
+
+
+
 
